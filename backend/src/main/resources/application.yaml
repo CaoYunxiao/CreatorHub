@@ -1,0 +1,17 @@
+spring:
+  application:
+    name: backend
+  datasource:
+    url: ${CREATORHUB_DB_URL}
+    username: ${CREATORHUB_DB_USERNAME}
+    password: ${CREATORHUB_DB_PASSWORD}
+  sql:
+    init:
+      mode: never
+server:
+  servlet:
+    session:
+      timeout: 30m
+      cookie:
+        http-only: true
+        same-site: lax
