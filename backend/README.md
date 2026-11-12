@@ -146,3 +146,24 @@ Session 保存在进程内存，重启会退出登录；尚未实现多实例共
 此阶段尚无登录限流、找回密码、邮箱验证等功能；公开部署前另行设计。
 
 参考：[Spring Security Session 管理](https://docs.spring.io/spring-security/reference/servlet/authentication/session-management.html)。
+
+## 阶段 4：作品文字管理
+
+| 接口 | 权限 | 成功响应 |
+| --- | --- | --- |
+| GET /api/works/{id} | 公开 | 200，包含正文和作者 ID |
+| POST /api/works | 登录及 CSRF | 201，Location 为新作品的详情地址 |
+| PUT /api/works/{id} | 作者本人及 CSRF | 204，随后可重新获取详情 |
+
+创建和编辑接收 JSON，包含必填的 title、content 和可选的 intro。
+PUT 替换全部文字字段，省略或传 null 的 intro 会清空简介。标题去除首尾空白后最多
+200 字符，简介最多 500 字符，正文非空且 UTF-8 编码最多 65535 字节。
+正文是纯文本，客户端应按文本显示。现有列表仍使用原有分页格式且不加载正文。
+
+作者 ID 来自服务端登录身份。更新语句同时匹配作品 ID 与作者 ID。
+不存在的作品返回 404，编辑他人的作品返回 403，参数无效返回 400。
+写请求继续使用阶段 3 的 Cookie 和 CSRF header。
+
+自动测试使用模拟 Repository 和 JDBC，不访问真实 MySQL。现有应用账户要联调此功能，
+还需单独批准 works 表的正文读取和列级 INSERT、UPDATE 权限，以及测试数据写入。
+本阶段没有删除接口，也无需修改表结构。

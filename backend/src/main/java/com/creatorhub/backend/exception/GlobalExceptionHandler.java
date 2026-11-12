@@ -13,6 +13,18 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 
 @RestControllerAdvice
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
+    @ExceptionHandler(WorkNotFoundException.class)
+    public ResponseEntity<ApiError> workNotFound() {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new ApiError("WORK_NOT_FOUND", "作品不存在"));
+    }
+
+    @ExceptionHandler(WorkForbiddenException.class)
+    public ResponseEntity<ApiError> workForbidden() {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(new ApiError("WORK_FORBIDDEN", "只有作者可以编辑作品"));
+    }
+
     @ExceptionHandler(UsernameTakenException.class)
     public ResponseEntity<ApiError> usernameTaken(UsernameTakenException exception) {
         return ResponseEntity.status(HttpStatus.CONFLICT)

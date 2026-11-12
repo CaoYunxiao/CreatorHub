@@ -8,6 +8,7 @@ import com.creatorhub.backend.entity.WorkSummary;
 import com.creatorhub.backend.exception.GlobalExceptionHandler;
 import com.creatorhub.backend.repository.WorkRepository;
 import com.creatorhub.backend.service.WorkService;
+import com.creatorhub.backend.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.dao.DataAccessResourceFailureException;
@@ -27,7 +28,7 @@ class WorkListTests {
     @BeforeEach
     void setUp() {
         repository = mock(WorkRepository.class);
-        mvc = MockMvcBuilders.standaloneSetup(new WorkController(new WorkService(repository)))
+        mvc = MockMvcBuilders.standaloneSetup(new WorkController(new WorkService(repository, mock(UserService.class))))
                 .setControllerAdvice(new GlobalExceptionHandler()).build();
     }
 
@@ -82,7 +83,7 @@ class WorkListTests {
 
     @Test
     void preservesHttpStatusForUnsupportedMethodAndMissingPath() throws Exception {
-        mvc.perform(post("/api/works")).andExpect(status().isMethodNotAllowed());
+        mvc.perform(patch("/api/works")).andExpect(status().isMethodNotAllowed());
         mvc.perform(get("/api/unknown")).andExpect(status().isNotFound());
         verifyNoInteractions(repository);
     }

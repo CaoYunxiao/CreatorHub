@@ -16,6 +16,14 @@ import static org.mockito.Mockito.*;
 
 class WorkRepositoryTests {
     @Test
+    void updateBindsBothWorkIdAndAuthorIdInTheSql() {
+        var jdbc = mock(JdbcTemplate.class);
+        new WorkRepository(jdbc).updateByAuthor(7L, 9L, "标题", null, "正文");
+        verify(jdbc).update(contains("WHERE id = ? AND user_id = ?"), eq("标题"), isNull(),
+                eq("正文"), eq(7L), eq(9L));
+    }
+
+    @Test
     void bindsPaginationAndMapsNullableIntroWithoutLoadingContent() throws Exception {
         var jdbc = mock(JdbcTemplate.class);
         var row = mock(ResultSet.class);
