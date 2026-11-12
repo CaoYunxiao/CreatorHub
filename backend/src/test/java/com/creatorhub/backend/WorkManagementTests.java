@@ -7,6 +7,7 @@ import com.creatorhub.backend.entity.UserAccount;
 import com.creatorhub.backend.entity.WorkDetail;
 import com.creatorhub.backend.repository.UserRepository;
 import com.creatorhub.backend.repository.WorkRepository;
+import com.creatorhub.backend.repository.WorkImageRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -30,6 +31,7 @@ class WorkManagementTests {
     @Autowired MockMvc mvc;
     @MockitoBean UserRepository users;
     @MockitoBean WorkRepository works;
+    @MockitoBean WorkImageRepository images;
 
     @Test
     void anonymousCanReadWorkDetailAndMissingWorkReturns404() throws Exception {

@@ -8,6 +8,13 @@ spring:
   sql:
     init:
       mode: never
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 6MB
+      file-size-threshold: 5MB
+creatorhub:
+  upload-directory: ${CREATORHUB_UPLOAD_DIRECTORY:uploads}
 server:
   servlet:
     session:

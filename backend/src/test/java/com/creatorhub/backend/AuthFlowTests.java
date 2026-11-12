@@ -5,6 +5,7 @@ import java.util.Optional;
 import com.creatorhub.backend.entity.UserAccount;
 import com.creatorhub.backend.repository.UserRepository;
 import com.creatorhub.backend.repository.WorkRepository;
+import com.creatorhub.backend.repository.WorkImageRepository;
 import com.jayway.jsonpath.JsonPath;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +32,7 @@ class AuthFlowTests {
     @Autowired PasswordEncoder encoder;
     @MockitoBean UserRepository users;
     @MockitoBean WorkRepository works;
+    @MockitoBean WorkImageRepository images;
 
     @Test
     void registrationStoresHashAndDoesNotAutomaticallyLogin() throws Exception {

@@ -24,6 +24,7 @@ public class SecurityConfig {
         http.authorizeHttpRequests(authorize -> authorize
                         .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/works", "/api/works/{id}", "/api/auth/csrf").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/works/{id}/images", "/api/works/{id}/images/{fileName}").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/register").permitAll()
                         .anyRequest().authenticated())
                 // 保留默认 CSRF、Session 固定攻击防护及显式保存认证上下文的过滤器。

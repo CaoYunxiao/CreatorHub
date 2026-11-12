@@ -167,3 +167,24 @@ PUT 替换全部文字字段，省略或传 null 的 intro 会清空简介。标
 自动测试使用模拟 Repository 和 JDBC，不访问真实 MySQL。现有应用账户要联调此功能，
 还需单独批准 works 表的正文读取和列级 INSERT、UPDATE 权限，以及测试数据写入。
 本阶段没有删除接口，也无需修改表结构。
+
+## 阶段 5：上传和展示作品图片
+
+| 接口 | 行为 |
+| --- | --- |
+| POST /api/works/{id}/images | 作者登录后用 multipart/form-data 的 file 字段上传一张图片，携带当前 CSRF 请求头 |
+| GET /api/works/{id}/images | 公开返回图片 ID、imageUrl 和 sortOrder，按 sortOrder、ID 升序 |
+| GET /api/works/{id}/images/{fileName} | 公开读取已关联到该作品的图片 |
+
+上传成功返回 201，Location 是可读取的图片地址。新图片的 sortOrder 默认是 0。
+上传内容须为能解码的 JPEG 或 PNG，文件最多 5 MiB，宽高各不超过 4096 像素。
+文件名由后端生成。应用从 backend 目录启动时，默认把文件保存在 backend/uploads。
+可通过 CREATORHUB_UPLOAD_DIRECTORY 设置其他存储目录。
+
+MySQL 记录图片与作品的关联，磁盘保存图片本身。数据库写入失败时会尝试清理本次上传文件。
+进程在保存文件后、写入数据库前异常退出，可能留下未关联文件。图片数据恢复需要同时恢复
+上传目录和对应数据库记录。
+
+自动测试使用临时目录和模拟数据库。真实 MySQL 联调需要额外批准 work_images 表的
+SELECT（id、work_id、image_url、sort_order）、INSERT（work_id、image_url、sort_order）
+权限及测试图片关联写入。
