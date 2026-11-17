@@ -8,6 +8,7 @@ import javax.sql.DataSource;
 import com.creatorhub.backend.dto.TagResponse;
 import com.creatorhub.backend.entity.UserAccount;
 import com.creatorhub.backend.repository.TagRepository;
+import com.creatorhub.backend.repository.FavoriteRepository;
 import com.creatorhub.backend.repository.UserRepository;
 import com.creatorhub.backend.repository.WorkImageRepository;
 import com.creatorhub.backend.repository.WorkRepository;
@@ -33,6 +34,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(properties = "spring.autoconfigure.exclude=org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration")
 @AutoConfigureMockMvc
 class TagFlowTests {
+    @MockitoBean FavoriteRepository favorites;
     @Autowired MockMvc mvc;
     @MockitoBean UserRepository users;
     @MockitoBean WorkRepository works;

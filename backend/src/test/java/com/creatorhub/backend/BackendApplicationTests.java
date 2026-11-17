@@ -6,11 +6,13 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import com.creatorhub.backend.repository.WorkRepository;
 import com.creatorhub.backend.repository.WorkImageRepository;
 import com.creatorhub.backend.repository.TagRepository;
+import com.creatorhub.backend.repository.FavoriteRepository;
 import com.creatorhub.backend.repository.UserRepository;
 
 // 普通上下文测试不连接数据库；真实连接由显式开启的专用测试验证。
 @SpringBootTest(properties = "spring.autoconfigure.exclude=org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration")
 class BackendApplicationTests {
+    @MockitoBean FavoriteRepository favorites;
     @MockitoBean TagRepository tags;
 
 	@MockitoBean

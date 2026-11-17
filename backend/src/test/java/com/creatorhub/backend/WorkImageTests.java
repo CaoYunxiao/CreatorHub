@@ -18,6 +18,7 @@ import com.creatorhub.backend.entity.WorkDetail;
 import com.creatorhub.backend.repository.UserRepository;
 import com.creatorhub.backend.repository.WorkImageRepository;
 import com.creatorhub.backend.repository.TagRepository;
+import com.creatorhub.backend.repository.FavoriteRepository;
 import com.creatorhub.backend.repository.WorkRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -40,6 +41,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(properties = "spring.autoconfigure.exclude=org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration")
 @AutoConfigureMockMvc
 class WorkImageTests {
+    @MockitoBean FavoriteRepository favorites;
     @MockitoBean TagRepository tags;
     @TempDir static Path uploads;
 

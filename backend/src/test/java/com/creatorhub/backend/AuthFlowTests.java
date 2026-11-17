@@ -7,6 +7,7 @@ import com.creatorhub.backend.repository.UserRepository;
 import com.creatorhub.backend.repository.WorkRepository;
 import com.creatorhub.backend.repository.WorkImageRepository;
 import com.creatorhub.backend.repository.TagRepository;
+import com.creatorhub.backend.repository.FavoriteRepository;
 import com.jayway.jsonpath.JsonPath;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +30,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(properties = "spring.autoconfigure.exclude=org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration")
 @AutoConfigureMockMvc
 class AuthFlowTests {
+    @MockitoBean FavoriteRepository favorites;
     @MockitoBean TagRepository tags;
     @Autowired MockMvc mvc;
     @Autowired PasswordEncoder encoder;
