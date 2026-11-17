@@ -103,6 +103,16 @@
             <textarea id="work-intro" name="intro" rows="2"></textarea>
             <label for="work-body">正文</label>
             <textarea id="work-body" name="content" rows="7" required></textarea>
+            <fieldset id="work-tag-fields" class="work-tags" hidden>
+                <legend>作品标签 <span class="meta">（选填，最多 50 个）</span></legend>
+                <div id="work-tag-options" class="tag-options"></div>
+                <label for="new-tag-name">新标签名称</label>
+                <div class="tag-create">
+                    <input id="new-tag-name" autocomplete="off">
+                    <button id="create-tag" type="button" class="secondary">创建标签</button>
+                </div>
+                <p id="work-tag-status" class="meta" role="status" hidden></p>
+            </fieldset>
             <p class="error" role="alert" hidden></p>
             <div class="dialog-actions">
                 <button type="button" class="secondary" data-close>取消</button>

@@ -63,6 +63,10 @@ public class TagRepository {
 
     public void replaceForWork(long workId, List<Long> tagIds) {
         jdbc.update("DELETE FROM work_tags WHERE work_id = ?", workId);
+        addForWork(workId, tagIds);
+    }
+
+    public void addForWork(long workId, List<Long> tagIds) {
         if (!tagIds.isEmpty()) {
             List<Object[]> rows = tagIds.stream().map(tagId -> new Object[]{workId, tagId}).toList();
             jdbc.batchUpdate("INSERT INTO work_tags (work_id, tag_id) VALUES (?, ?)", rows);

@@ -1,6 +1,7 @@
 package com.creatorhub.backend.service;
 
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 import com.creatorhub.backend.dto.WorkDetailResponse;
 import com.creatorhub.backend.dto.WorkPageResponse;
@@ -10,16 +11,20 @@ import com.creatorhub.backend.exception.InvalidRequestException;
 import com.creatorhub.backend.exception.WorkForbiddenException;
 import com.creatorhub.backend.exception.WorkNotFoundException;
 import com.creatorhub.backend.repository.WorkRepository;
+import com.creatorhub.backend.repository.TagRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class WorkService {
     private final WorkRepository workRepository;
     private final UserService userService;
+    private final TagRepository tags;
 
-    public WorkService(WorkRepository workRepository, UserService userService) {
+    public WorkService(WorkRepository workRepository, UserService userService, TagRepository tags) {
         this.workRepository = workRepository;
         this.userService = userService;
+        this.tags = tags;
     }
 
     public WorkPageResponse listWorks(int page, int size, String keyword, Long tagId) {
@@ -54,10 +59,20 @@ public class WorkService {
                 work.content(), work.createdAt(), work.updatedAt());
     }
 
-    public long createWork(String username, WorkWriteRequest request) {
+    @Transactional
+    public long createWork(String username, WorkWriteRequest request, List<Long> tagIds) {
         validate(request);
+        List<Long> selected = tagIds == null ? List.of() : tagIds;
+        TagService.validateTagIds(selected);
         long authorId = userService.currentUser(username).id();
-        return workRepository.insert(authorId, request.title().strip(), request.intro(), request.content());
+        if (!selected.isEmpty() && !tags.allExist(selected)) {
+            throw new InvalidRequestException("至少有一个标签不存在");
+        }
+        long id = workRepository.insert(authorId, request.title().strip(), request.intro(), request.content());
+        if (!selected.isEmpty()) {
+            tags.addForWork(id, selected);
+        }
+        return id;
     }
 
     public void updateWork(long id, String username, WorkWriteRequest request) {

@@ -126,6 +126,15 @@ dialog input, dialog textarea { margin-bottom: 1rem; }
 dialog input[aria-describedby] { margin-bottom: .4rem; }
 .editor-dialog { width: min(44rem, calc(100% - 2rem)); max-height: calc(100% - 2rem); }
 textarea { display: block; resize: vertical; }
+.work-tags { min-width: 0; padding: .85rem; margin: 0 0 1rem; border: 1px solid var(--line); border-radius: .45rem; }
+.work-tags legend { font-weight: 650; padding-inline: .25rem; }
+.tag-options { display: flex; flex-wrap: wrap; gap: .5rem; max-height: 11rem; overflow: auto; margin: .25rem 0 1rem; padding: .2rem; }
+.tag-option { display: inline-flex; align-items: center; gap: .35rem; margin: 0; overflow-wrap: anywhere; }
+.tag-option input { width: auto; margin: 0; padding: 0; }
+.tag-create { display: flex; align-items: center; gap: .5rem; }
+.tag-create input { margin: 0; }
+.tag-create button { flex-shrink: 0; }
+#work-tag-status { margin-block: .6rem 0; }
 .dialog-actions { justify-content: end; }
 
 @media (max-width: 650px) {

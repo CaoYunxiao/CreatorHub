@@ -7,6 +7,7 @@ import com.creatorhub.backend.controller.WorkController;
 import com.creatorhub.backend.entity.WorkSummary;
 import com.creatorhub.backend.exception.GlobalExceptionHandler;
 import com.creatorhub.backend.repository.WorkRepository;
+import com.creatorhub.backend.repository.TagRepository;
 import com.creatorhub.backend.service.WorkService;
 import com.creatorhub.backend.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,7 +29,8 @@ class WorkListTests {
     @BeforeEach
     void setUp() {
         repository = mock(WorkRepository.class);
-        mvc = MockMvcBuilders.standaloneSetup(new WorkController(new WorkService(repository, mock(UserService.class))))
+        mvc = MockMvcBuilders.standaloneSetup(
+                        new WorkController(new WorkService(repository, mock(UserService.class), mock(TagRepository.class))))
                 .setControllerAdvice(new GlobalExceptionHandler()).build();
     }
 

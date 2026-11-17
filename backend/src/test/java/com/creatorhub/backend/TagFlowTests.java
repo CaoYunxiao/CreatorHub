@@ -113,6 +113,47 @@ class TagFlowTests {
     }
 
     @Test
+    void createsWorkAndSelectedTagsInOneTransaction() throws Exception {
+        when(tags.allExist(List.of(3L, 4L))).thenReturn(true);
+        when(works.insert(9L, "标题", null, "正文")).thenReturn(21L);
+
+        createWorkWithTags("[3,4]").andExpect(status().isCreated())
+                .andExpect(header().string("Location", "/api/works/21"));
+
+        var order = inOrder(tags, works, connection);
+        order.verify(tags).allExist(List.of(3L, 4L));
+        order.verify(works).insert(9L, "标题", null, "正文");
+        order.verify(tags).addForWork(21L, List.of(3L, 4L));
+        order.verify(connection).commit();
+    }
+
+    @Test
+    void invalidCreationTagsDoNotInsertAWork() throws Exception {
+        createWorkWithTags("[3,3]").andExpect(status().isBadRequest());
+        createWorkWithTags("[999]").andExpect(status().isBadRequest());
+        verify(works, never()).insert(anyLong(), anyString(), any(), anyString());
+        verify(tags, never()).addForWork(anyLong(), anyList());
+    }
+
+    @Test
+    void failureToAttachSelectedTagsRollsBackWorkCreation() throws Exception {
+        when(tags.allExist(List.of(3L))).thenReturn(true);
+        when(works.insert(9L, "标题", null, "正文")).thenReturn(21L);
+        doThrow(new DataAccessResourceFailureException("simulated association failure"))
+                .when(tags).addForWork(21L, List.of(3L));
+
+        createWorkWithTags("[3]").andExpect(status().isServiceUnavailable());
+        verify(connection).rollback();
+        verify(connection, never()).commit();
+    }
+
+    private org.springframework.test.web.servlet.ResultActions createWorkWithTags(String ids) throws Exception {
+        return mvc.perform(post("/api/works").with(user("author")).with(csrf())
+                .contentType("application/json")
+                .content("{\"title\":\"标题\",\"content\":\"正文\",\"tagIds\":" + ids + "}"));
+    }
+
+    @Test
     void replacementFailureRollsBackTheJdbcTransaction() throws Exception {
         when(tags.allExist(List.of(3L))).thenReturn(true);
         doThrow(new DataAccessResourceFailureException("simulated replacement failure"))

@@ -4,6 +4,7 @@ import java.net.URI;
 import java.security.Principal;
 
 import com.creatorhub.backend.dto.WorkDetailResponse;
+import com.creatorhub.backend.dto.WorkCreateRequest;
 import com.creatorhub.backend.dto.WorkPageResponse;
 import com.creatorhub.backend.dto.WorkWriteRequest;
 import com.creatorhub.backend.service.WorkService;
@@ -44,8 +45,9 @@ public class WorkController {
     }
 
     @PostMapping
-    public ResponseEntity<Void> createWork(Principal principal, @RequestBody WorkWriteRequest request) {
-        long id = workService.createWork(principal.getName(), request);
+    public ResponseEntity<Void> createWork(Principal principal, @RequestBody WorkCreateRequest request) {
+        var text = new WorkWriteRequest(request.title(), request.intro(), request.content());
+        long id = workService.createWork(principal.getName(), text, request.tagIds());
         return ResponseEntity.created(URI.create("/api/works/" + id)).build();
     }
 

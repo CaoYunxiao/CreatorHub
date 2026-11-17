@@ -15,6 +15,7 @@ let user = null;
 let activeRead;
 let previousList = "#works";
 let mutationPending = false;
+let tagCatalog = [];
 
 class ApiError extends Error {
     constructor(status) {
@@ -149,15 +150,21 @@ function selectTag(id) {
     tagSelect.value = id;
 }
 
-async function loadTags() {
-    const tags = await request("/api/tags");
-    for (const tag of tags) {
+function updateTagCatalog(tags) {
+    tagCatalog = tags;
+    tagSelect.replaceChildren(new Option("全部标签", ""));
+    for (const tag of tagCatalog) {
         const option = node("option", tag.name);
         option.value = tag.id;
         tagSelect.append(option);
     }
     const current = route();
     if (current.view === "works") selectTag(current.tagId);
+    byId("tag-status").hidden = true;
+}
+
+async function loadTags() {
+    updateTagCatalog(await request("/api/tags"));
 }
 
 function workCard(work, isFavoriteList) {
@@ -378,6 +385,56 @@ function openWorkEditor(id = "", work = {}) {
     form.elements.title.value = work.title ?? "";
     form.elements.intro.value = work.intro ?? "";
     form.elements.content.value = work.content ?? "";
+    byId("work-tag-fields").hidden = !!id;
+    if (!id) {
+        showTagStatus("");
+        renderTagOptions([]);
+        refreshEditorTags();
+    }
+}
+
+function showTagStatus(message) {
+    const status = byId("work-tag-status");
+    status.textContent = message;
+    status.hidden = !message;
+}
+
+function selectedTags() {
+    return Array.from(byId("work-tag-options").querySelectorAll("input:checked"), input => input.value);
+}
+
+function renderTagOptions(selected) {
+    const container = byId("work-tag-options");
+    container.replaceChildren();
+    if (!tagCatalog.length) {
+        container.append(node("span", "暂无可选标签。", "meta"));
+        return;
+    }
+    for (const tag of tagCatalog) {
+        const label = node("label", null, "pill tag-option");
+        const input = node("input");
+        input.type = "checkbox";
+        input.name = "tagIds";
+        input.value = String(tag.id);
+        input.checked = selected.includes(input.value);
+        label.append(input, node("span", tag.name));
+        container.append(label);
+    }
+}
+
+async function refreshEditorTags() {
+    try {
+        const tags = await request("/api/tags");
+        if (workDialog.open && !byId("work-tag-fields").hidden && !mutationPending) {
+            updateTagCatalog(tags);
+            renderTagOptions(selectedTags());
+            showTagStatus("");
+        }
+    } catch {
+        if (workDialog.open && !byId("work-tag-fields").hidden && !mutationPending) {
+            showTagStatus("暂时无法刷新标签。");
+        }
+    }
 }
 
 function openImageUpload(id) {
@@ -405,6 +462,50 @@ bindForm(deleteDialog, async () => {
 
 byId("register").addEventListener("click", () => openForm(registerDialog));
 byId("new-work").addEventListener("click", () => openWorkEditor());
+byId("new-tag-name").addEventListener("keydown", event => {
+    if (event.key === "Enter" && !event.isComposing) {
+        event.preventDefault();
+        byId("create-tag").click();
+    }
+});
+byId("create-tag").addEventListener("click", async () => {
+    if (mutationPending || !user) return;
+    const field = byId("new-tag-name");
+    const name = field.value.trim();
+    if (!name || [...name].length > 50) {
+        showTagStatus("标签名称需包含 1 至 50 个字符。");
+        field.focus();
+        return;
+    }
+    const form = byId("work-form");
+    const buttons = Array.from(form.querySelectorAll("button"));
+    mutationPending = true;
+    for (const button of buttons) button.disabled = true;
+    try {
+        const response = await writeJson("/api/tags", "POST", { name });
+        const tag = await response.json();
+        const selected = selectedTags();
+        if (!tagCatalog.some(item => item.id === tag.id)) updateTagCatalog([...tagCatalog, tag]);
+        const canSelect = selected.length < 50;
+        renderTagOptions(canSelect ? [...selected, String(tag.id)] : selected);
+        field.value = "";
+        showTagStatus(canSelect ? "已创建并选中新标签。" : "标签已创建。取消勾选一个标签后即可选用。");
+    } catch (error) {
+        handleExpiredSession(error);
+        showTagStatus(error.status === 409 ? "同名标签已存在，请从列表选择。" : errorMessage(error));
+        if (error.status === 409) {
+            try {
+                await loadTags();
+                renderTagOptions(selectedTags());
+            } catch {
+                showTagStatus("同名标签已存在，标签列表暂时无法刷新。");
+            }
+        }
+    } finally {
+        for (const button of buttons) button.disabled = false;
+        mutationPending = false;
+    }
+});
 
 bindForm(registerDialog, async values => {
     const username = String(values.get("username"));
@@ -433,8 +534,13 @@ bindForm(workDialog, async values => {
         throw new Error("正文不能为空，UTF-8 编码不能超过 65535 字节。");
     }
     const id = byId("work-form").dataset.workId;
+    const fields = { title, intro: intro || null, content };
+    if (!id) {
+        fields.tagIds = values.getAll("tagIds").map(Number);
+        if (fields.tagIds.length > 50) throw new Error("最多可选择 50 个标签。");
+    }
     const path = id ? "/api/works/" + id : "/api/works";
-    const response = await writeJson(path, id ? "PUT" : "POST", { title, intro: intro || null, content });
+    const response = await writeJson(path, id ? "PUT" : "POST", fields);
     workDialog.close();
     if (id) {
         announce("作品已保存。");

@@ -51,10 +51,7 @@ public class TagService {
     @Transactional
     public void replaceForWork(long workId, String username, List<Long> tagIds) {
         validateWorkId(workId);
-        if (tagIds == null || tagIds.size() > 50 || tagIds.stream().anyMatch(id -> id == null || id < 1)
-                || new HashSet<>(tagIds).size() != tagIds.size()) {
-            throw new InvalidRequestException("tagIds 必须是最多 50 个不重复的正整数，可传空数组");
-        }
+        validateTagIds(tagIds);
         long userId = users.currentUser(username).id();
         // 锁定作品行，串行执行同一作品的替换事务。
         long authorId = works.lockAuthorId(workId).orElseThrow(WorkNotFoundException::new);
@@ -65,6 +62,13 @@ public class TagService {
             throw new InvalidRequestException("至少有一个标签不存在");
         }
         tags.replaceForWork(workId, tagIds);
+    }
+
+    static void validateTagIds(List<Long> tagIds) {
+        if (tagIds == null || tagIds.size() > 50 || tagIds.stream().anyMatch(id -> id == null || id < 1)
+                || new HashSet<>(tagIds).size() != tagIds.size()) {
+            throw new InvalidRequestException("tagIds 必须是最多 50 个不重复的正整数，可传空数组");
+        }
     }
 
     private static void validateWorkId(long workId) {
