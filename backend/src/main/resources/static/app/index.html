@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>CreatorHub · 作品集</title>
+    <link rel="stylesheet" href="/app/styles.css">
+    <script type="module" src="/app/app.js"></script>
+</head>
+<body>
+    <a class="skip-link" href="#main-content">跳转到内容</a>
+    <header class="site-header">
+        <div class="wrap header-inner">
+            <a class="brand" href="#works"><span class="brand-mark" aria-hidden="true">C</span>CreatorHub</a>
+            <nav aria-label="主导航">
+                <a id="works-nav" href="#works">探索作品</a>
+                <a id="favorites-nav" href="#favorites">我的收藏</a>
+            </nav>
+            <div class="account">
+                <span id="current-user" hidden></span>
+                <button id="login" type="button">登录</button>
+                <button id="logout" type="button" hidden>退出</button>
+            </div>
+        </div>
+    </header>
+    <main class="wrap" id="main-content">
+        <p id="notice" class="notice" role="status" hidden></p>
+        <section id="works-view" aria-labelledby="works-title">
+            <div class="hero">
+                <div class="hero-art" aria-hidden="true"></div>
+                <div class="hero-copy">
+                    <h1 id="works-title" tabindex="-1">探索作品</h1>
+                    <p>按标题或标签发现创作，收藏你想再看的作品。</p>
+                </div>
+            </div>
+            <form id="search" class="search">
+                <div>
+                    <label for="keyword">作品标题</label>
+                    <input id="keyword" type="search" maxlength="200" placeholder="搜索作品标题">
+                </div>
+                <div>
+                    <label for="tag">标签</label>
+                    <select id="tag"><option value="">全部标签</option></select>
+                </div>
+                <button type="submit">搜索</button>
+                <button type="reset" class="secondary">清空</button>
+            </form>
+            <p id="tag-status" role="status" hidden></p>
+            <div id="works-results"></div>
+        </section>
+        <section id="detail-view" aria-labelledby="detail-title" hidden>
+            <a class="back-link" id="detail-back" href="#works">← 返回作品列表</a>
+            <div id="detail-content"></div>
+        </section>
+        <section id="favorites-view" aria-labelledby="favorites-title" hidden>
+            <div class="section-heading">
+                <h1 id="favorites-title" tabindex="-1">我的收藏</h1>
+            </div>
+            <div id="favorites-results"></div>
+        </section>
+    </main>
+    <footer class="wrap footer"><a href="#works">CreatorHub</a></footer>
+    <dialog id="login-dialog" aria-labelledby="login-title">
+        <form id="login-form">
+            <h2 id="login-title">登录 CreatorHub</h2>
+            <label for="username">用户名</label>
+            <input id="username" name="username" autocomplete="username" required maxlength="50">
+            <label for="password">密码</label>
+            <input id="password" name="password" type="password" autocomplete="current-password" required>
+            <p id="login-error" class="error" role="alert" hidden></p>
+            <div class="dialog-actions">
+                <button type="button" id="cancel-login" class="secondary">取消</button>
+                <button type="submit">登录</button>
+            </div>
+        </form>
+    </dialog>
+</body>
+</html>

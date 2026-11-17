@@ -38,6 +38,15 @@ class FavoriteFlowTests {
     @MockitoBean FavoriteRepository favorites;
 
     @Test
+    void frontendAssetsArePublicWhileFavoritesRemainPrivate() throws Exception {
+        for (String path : List.of("/app/index.html", "/app/styles.css", "/app/app.js")) {
+            mvc.perform(get(path)).andExpect(status().isOk());
+        }
+        mvc.perform(get("/app/other.html")).andExpect(status().isUnauthorized());
+        mvc.perform(get("/api/me/favorites")).andExpect(status().isUnauthorized());
+    }
+
+    @Test
     void anonymousRequestsAndMissingCsrfAreRejected() throws Exception {
         mvc.perform(get("/api/me/favorites")).andExpect(status().isUnauthorized());
         mvc.perform(put("/api/works/7/favorite").with(csrf())).andExpect(status().isUnauthorized());

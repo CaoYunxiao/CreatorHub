@@ -23,6 +23,8 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.authorizeHttpRequests(authorize -> authorize
                         .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
+                        .requestMatchers(HttpMethod.GET, "/app/index.html", "/app/styles.css", "/app/app.js").permitAll()
+                        .requestMatchers(HttpMethod.HEAD, "/app/index.html", "/app/styles.css", "/app/app.js").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/works", "/api/works/{id}", "/api/auth/csrf").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/tags", "/api/works/{id}/tags").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/works/{id}/images", "/api/works/{id}/images/{fileName}").permitAll()
