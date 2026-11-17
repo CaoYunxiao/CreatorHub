@@ -22,16 +22,25 @@ public class WorkService {
         this.userService = userService;
     }
 
-    public WorkPageResponse listWorks(int page, int size) {
+    public WorkPageResponse listWorks(int page, int size, String keyword, Long tagId) {
         if (page < 1) {
             throw new InvalidRequestException("page 必须大于等于 1");
         }
         if (size < 1 || size > 100) {
             throw new InvalidRequestException("size 必须在 1 到 100 之间");
         }
+        String query = keyword == null || keyword.isBlank() ? null : keyword.strip();
+        if (query != null && query.codePointCount(0, query.length()) > 200) {
+            throw new InvalidRequestException("关键词不能超过 200 字符");
+        }
+        if (tagId != null && tagId < 1) {
+            throw new InvalidRequestException("标签 ID 必须大于等于 1");
+        }
         // 先转 long 再乘，避免 int 溢出。
         long offset = (page - 1L) * size;
-        var items = workRepository.findPage(size, offset).stream()
+        var works = query == null && tagId == null ? workRepository.findPage(size, offset)
+                : workRepository.searchPage(query, tagId, size, offset);
+        var items = works.stream()
                 .map(work -> new WorkSummaryResponse(work.id(), work.userId(), work.title(),
                         work.intro(), work.createdAt(), work.updatedAt()))
                 .toList();

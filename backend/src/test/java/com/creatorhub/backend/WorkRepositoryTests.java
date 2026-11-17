@@ -16,6 +16,15 @@ import static org.mockito.Mockito.*;
 
 class WorkRepositoryTests {
     @Test
+    void bindsLiteralKeywordAndTagFilterTogether() {
+        var jdbc = mock(JdbcTemplate.class);
+        new WorkRepository(jdbc).searchPage("100%_!", 3L, 20, 40L);
+        verify(jdbc).query(contains("LIKE ? ESCAPE '!' AND EXISTS"),
+                org.mockito.ArgumentMatchers.<RowMapper<WorkSummary>>any(),
+                eq("%100!%!_!!%"), eq(3L), eq(20), eq(40L));
+    }
+
+    @Test
     void updateBindsBothWorkIdAndAuthorIdInTheSql() {
         var jdbc = mock(JdbcTemplate.class);
         new WorkRepository(jdbc).updateByAuthor(7L, 9L, "标题", null, "正文");

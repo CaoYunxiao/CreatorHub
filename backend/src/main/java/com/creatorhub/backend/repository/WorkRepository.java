@@ -2,6 +2,7 @@ package com.creatorhub.backend.repository;
 
 import java.sql.Statement;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -9,11 +10,16 @@ import com.creatorhub.backend.entity.WorkDetail;
 import com.creatorhub.backend.entity.WorkSummary;
 import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.stereotype.Repository;
 
 @Repository
 public class WorkRepository {
+    private static final RowMapper<WorkSummary> SUMMARY_ROW = (row, number) -> new WorkSummary(
+            row.getLong("id"), row.getLong("user_id"), row.getString("title"), row.getString("intro"),
+            row.getObject("created_at", LocalDateTime.class), row.getObject("updated_at", LocalDateTime.class));
+
     private final JdbcTemplate jdbcTemplate;
 
     public WorkRepository(JdbcTemplate jdbcTemplate) {
@@ -27,11 +33,37 @@ public class WorkRepository {
                 FROM works
                 ORDER BY created_at DESC, id DESC
                 LIMIT ? OFFSET ?
-                """, (result, rowNumber) -> new WorkSummary(
-                result.getLong("id"), result.getLong("user_id"),
-                result.getString("title"), result.getString("intro"),
-                result.getObject("created_at", java.time.LocalDateTime.class),
-                result.getObject("updated_at", java.time.LocalDateTime.class)), limit, offset);
+                """, SUMMARY_ROW, limit, offset);
+    }
+
+    public List<WorkSummary> searchPage(String keyword, Long tagId, int limit, long offset) {
+        var sql = new StringBuilder("""
+                SELECT w.id, w.user_id, w.title, w.intro, w.created_at, w.updated_at
+                FROM works w WHERE 1 = 1
+                """);
+        var arguments = new ArrayList<>();
+        if (keyword != null) {
+            sql.append(" AND w.title LIKE ? ESCAPE '!'");
+            arguments.add("%" + keyword.replace("!", "!!").replace("%", "!%").replace("_", "!_") + "%");
+        }
+        if (tagId != null) {
+            sql.append(" AND EXISTS (SELECT 1 FROM work_tags wt WHERE wt.work_id = w.id AND wt.tag_id = ?)");
+            arguments.add(tagId);
+        }
+        sql.append(" ORDER BY w.created_at DESC, w.id DESC LIMIT ? OFFSET ?");
+        arguments.add(limit);
+        arguments.add(offset);
+        return jdbcTemplate.query(sql.toString(), SUMMARY_ROW, arguments.toArray());
+    }
+
+    public Optional<Long> findAuthorId(long id) {
+        return jdbcTemplate.query("SELECT user_id FROM works WHERE id = ?",
+                (row, number) -> row.getLong("user_id"), id).stream().findFirst();
+    }
+
+    public Optional<Long> lockAuthorId(long id) {
+        return jdbcTemplate.query("SELECT user_id FROM works WHERE id = ? FOR UPDATE",
+                (row, number) -> row.getLong("user_id"), id).stream().findFirst();
     }
 
     public Optional<WorkDetail> findById(long id) {

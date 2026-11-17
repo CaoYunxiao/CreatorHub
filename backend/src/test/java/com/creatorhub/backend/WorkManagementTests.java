@@ -8,6 +8,7 @@ import com.creatorhub.backend.entity.WorkDetail;
 import com.creatorhub.backend.repository.UserRepository;
 import com.creatorhub.backend.repository.WorkRepository;
 import com.creatorhub.backend.repository.WorkImageRepository;
+import com.creatorhub.backend.repository.TagRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -24,6 +25,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(properties = "spring.autoconfigure.exclude=org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration")
 @AutoConfigureMockMvc
 class WorkManagementTests {
+    @MockitoBean TagRepository tags;
     private static final String WORK_JSON = """
             {"title":"标题","content":"正文"}
             """;

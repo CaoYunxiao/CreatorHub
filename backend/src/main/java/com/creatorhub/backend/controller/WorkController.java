@@ -31,8 +31,10 @@ public class WorkController {
     @GetMapping
     public WorkPageResponse listWorks(
             @RequestParam(name = "page", defaultValue = "1") int page,
-            @RequestParam(name = "size", defaultValue = "20") int size) {
-        return workService.listWorks(page, size);
+            @RequestParam(name = "size", defaultValue = "20") int size,
+            @RequestParam(name = "q", required = false) String keyword,
+            @RequestParam(name = "tagId", required = false) Long tagId) {
+        return workService.listWorks(page, size, keyword, tagId);
     }
 
     @GetMapping("/{id}")

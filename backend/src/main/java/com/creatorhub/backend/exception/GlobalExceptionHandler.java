@@ -13,6 +13,12 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 
 @RestControllerAdvice
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
+    @ExceptionHandler(TagNameTakenException.class)
+    public ResponseEntity<ApiError> tagNameTaken() {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(new ApiError("TAG_NAME_TAKEN", "标签名称已存在"));
+    }
+
     @ExceptionHandler(WorkNotFoundException.class)
     public ResponseEntity<ApiError> workNotFound() {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
