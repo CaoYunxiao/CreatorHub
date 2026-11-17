@@ -110,6 +110,17 @@
             </div>
         </form>
     </dialog>
+    <dialog id="delete-dialog" aria-labelledby="delete-title" aria-describedby="delete-description">
+        <form id="delete-form">
+            <h2 id="delete-title">删除作品</h2>
+            <p id="delete-description"></p>
+            <p class="error" role="alert" hidden></p>
+            <div class="dialog-actions">
+                <button type="button" class="secondary" data-close autofocus>取消</button>
+                <button type="submit" class="danger">确认删除</button>
+            </div>
+        </form>
+    </dialog>
     <dialog id="upload-dialog" aria-labelledby="upload-title">
         <form id="upload-form">
             <h2 id="upload-title">上传作品图片</h2>

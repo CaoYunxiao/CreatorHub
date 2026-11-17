@@ -4,28 +4,26 @@ import com.creatorhub.backend.dto.WorkPageResponse;
 import com.creatorhub.backend.exception.InvalidRequestException;
 import com.creatorhub.backend.exception.WorkNotFoundException;
 import com.creatorhub.backend.repository.FavoriteRepository;
-import com.creatorhub.backend.repository.WorkRepository;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 
 @Service
 public class FavoriteService {
     private final FavoriteRepository favorites;
-    private final WorkRepository works;
     private final UserService users;
 
-    public FavoriteService(FavoriteRepository favorites, WorkRepository works, UserService users) {
+    public FavoriteService(FavoriteRepository favorites, UserService users) {
         this.favorites = favorites;
-        this.works = works;
         this.users = users;
     }
 
     public void add(String username, long workId) {
         validateWorkId(workId);
         long userId = users.currentUser(username).id();
-        works.findAuthorId(workId).orElseThrow(WorkNotFoundException::new);
         try {
-            favorites.insert(userId, workId);
+            if (favorites.insert(userId, workId) == 0) {
+                throw new WorkNotFoundException();
+            }
         } catch (DuplicateKeyException ignored) {
             // 唯一约束处理重复请求，已有收藏时间保持不变。
         }

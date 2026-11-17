@@ -67,11 +67,24 @@ public class WorkService {
         int updated = workRepository.updateByAuthor(id, authorId, request.title().strip(),
                 request.intro(), request.content());
         if (updated == 0) {
-            var work = workRepository.findById(id).orElseThrow(WorkNotFoundException::new);
-            if (work.userId() != authorId) {
-                throw new WorkForbiddenException();
-            }
+            requireAuthor(id, authorId);
             // JDBC 也可能只统计实际发生变化的行。相同内容的 PUT 仍成功。
+        }
+    }
+
+    public void deleteWork(long id, String username) {
+        validateId(id);
+        long authorId = userService.currentUser(username).id();
+        if (workRepository.markDeletedByAuthor(id, authorId) == 0) {
+            requireAuthor(id, authorId);
+            throw new WorkNotFoundException();
+        }
+    }
+
+    private void requireAuthor(long id, long userId) {
+        long authorId = workRepository.findAuthorId(id).orElseThrow(WorkNotFoundException::new);
+        if (authorId != userId) {
+            throw new WorkForbiddenException();
         }
     }
 

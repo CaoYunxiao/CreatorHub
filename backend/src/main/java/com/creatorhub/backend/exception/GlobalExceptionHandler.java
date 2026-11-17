@@ -28,7 +28,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(WorkForbiddenException.class)
     public ResponseEntity<ApiError> workForbidden() {
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                .body(new ApiError("WORK_FORBIDDEN", "只有作者可以编辑作品"));
+                .body(new ApiError("WORK_FORBIDDEN", "只有作者可以修改这件作品"));
     }
 
     @ExceptionHandler(UsernameTakenException.class)

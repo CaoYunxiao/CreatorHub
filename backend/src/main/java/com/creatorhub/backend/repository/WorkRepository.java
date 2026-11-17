@@ -30,7 +30,7 @@ public class WorkRepository {
         // 排序字段固定，分页参数绑定，不把请求参数拼入 SQL。
         return jdbcTemplate.query("""
                 SELECT id, user_id, title, intro, created_at, updated_at
-                FROM works
+                FROM works WHERE deleted_at IS NULL
                 ORDER BY created_at DESC, id DESC
                 LIMIT ? OFFSET ?
                 """, SUMMARY_ROW, limit, offset);
@@ -39,7 +39,7 @@ public class WorkRepository {
     public List<WorkSummary> searchPage(String keyword, Long tagId, int limit, long offset) {
         var sql = new StringBuilder("""
                 SELECT w.id, w.user_id, w.title, w.intro, w.created_at, w.updated_at
-                FROM works w WHERE 1 = 1
+                FROM works w WHERE w.deleted_at IS NULL
                 """);
         var arguments = new ArrayList<>();
         if (keyword != null) {
@@ -57,19 +57,19 @@ public class WorkRepository {
     }
 
     public Optional<Long> findAuthorId(long id) {
-        return jdbcTemplate.query("SELECT user_id FROM works WHERE id = ?",
+        return jdbcTemplate.query("SELECT user_id FROM works WHERE id = ? AND deleted_at IS NULL",
                 (row, number) -> row.getLong("user_id"), id).stream().findFirst();
     }
 
     public Optional<Long> lockAuthorId(long id) {
-        return jdbcTemplate.query("SELECT user_id FROM works WHERE id = ? FOR UPDATE",
+        return jdbcTemplate.query("SELECT user_id FROM works WHERE id = ? AND deleted_at IS NULL FOR UPDATE",
                 (row, number) -> row.getLong("user_id"), id).stream().findFirst();
     }
 
     public Optional<WorkDetail> findById(long id) {
         return jdbcTemplate.query("""
                 SELECT id, user_id, title, intro, content, created_at, updated_at
-                FROM works WHERE id = ?
+                FROM works WHERE id = ? AND deleted_at IS NULL
                 """, (row, number) -> new WorkDetail(
                 row.getLong("id"), row.getLong("user_id"), row.getString("title"),
                 row.getString("intro"), row.getString("content"),
@@ -99,7 +99,14 @@ public class WorkRepository {
     public int updateByAuthor(long id, long authorId, String title, String intro, String content) {
         return jdbcTemplate.update("""
                 UPDATE works SET title = ?, intro = ?, content = ?
-                WHERE id = ? AND user_id = ?
+                WHERE id = ? AND user_id = ? AND deleted_at IS NULL
                 """, title, intro, content, id, authorId);
+    }
+
+    public int markDeletedByAuthor(long id, long authorId) {
+        return jdbcTemplate.update("""
+                UPDATE works SET deleted_at = CURRENT_TIMESTAMP
+                WHERE id = ? AND user_id = ? AND deleted_at IS NULL
+                """, id, authorId);
     }
 }

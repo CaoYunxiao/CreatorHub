@@ -63,7 +63,7 @@ class WorkManagementTests {
     void ownerCanUpdateEvenWhenValuesAreUnchanged() throws Exception {
         givenUser("author", 9L);
         when(works.updateByAuthor(7L, 9L, "标题", null, "正文")).thenReturn(1, 0);
-        when(works.findById(7L)).thenReturn(Optional.of(work()));
+        when(works.findAuthorId(7L)).thenReturn(Optional.of(9L));
         for (int attempt = 0; attempt < 2; attempt++) {
             mvc.perform(put("/api/works/7").with(user("author")).with(csrf())
                             .contentType(MediaType.APPLICATION_JSON).content(WORK_JSON))
@@ -75,7 +75,7 @@ class WorkManagementTests {
     @Test
     void anotherUserCannotUpdateAndUnknownWorkReturns404() throws Exception {
         givenUser("other", 12L);
-        when(works.findById(7L)).thenReturn(Optional.of(work()));
+        when(works.findAuthorId(7L)).thenReturn(Optional.of(9L));
         mvc.perform(put("/api/works/7").with(user("other")).with(csrf())
                         .contentType(MediaType.APPLICATION_JSON).content(WORK_JSON))
                 .andExpect(status().isForbidden()).andExpect(jsonPath("$.code").value("WORK_FORBIDDEN"));
@@ -84,6 +84,24 @@ class WorkManagementTests {
                 .andExpect(status().isNotFound());
         verify(works).updateByAuthor(7L, 12L, "标题", null, "正文");
         verify(works, never()).updateByAuthor(eq(7L), eq(9L), any(), any(), any());
+    }
+
+    @Test
+    void deleteRequiresLoginCsrfAndOwnership() throws Exception {
+        givenUser("author", 9L);
+        givenUser("other", 12L);
+        when(works.findAuthorId(7L)).thenReturn(Optional.of(9L), Optional.empty());
+        when(works.markDeletedByAuthor(7L, 9L)).thenReturn(1, 0);
+
+        mvc.perform(delete("/api/works/7").with(csrf())).andExpect(status().isUnauthorized());
+        mvc.perform(delete("/api/works/7").with(user("author"))).andExpect(status().isForbidden());
+        verify(works, never()).markDeletedByAuthor(anyLong(), anyLong());
+        mvc.perform(delete("/api/works/7").with(user("other")).with(csrf()))
+                .andExpect(status().isForbidden()).andExpect(jsonPath("$.code").value("WORK_FORBIDDEN"));
+        mvc.perform(delete("/api/works/7").with(user("author")).with(csrf()))
+                .andExpect(status().isNoContent());
+        mvc.perform(delete("/api/works/7").with(user("author")).with(csrf()))
+                .andExpect(status().isNotFound());
     }
 
     @Test

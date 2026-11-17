@@ -25,6 +25,9 @@ button {
     cursor: pointer;
 }
 button.secondary { color: var(--accent); background: transparent; }
+button.danger { border-color: #8b2d26; background: #8b2d26; color: white; }
+button.danger-text { border-color: #8b2d26; color: #8b2d26; }
+#delete-description { overflow-wrap: anywhere; }
 button:not(:disabled):hover { filter: brightness(1.18); }
 button:disabled { cursor: default; opacity: .55; }
 :focus-visible { outline: 3px solid #a64e16; outline-offset: 3px; }

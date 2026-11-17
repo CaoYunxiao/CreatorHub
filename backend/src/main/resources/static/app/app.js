@@ -7,6 +7,7 @@ const loginForm = byId("login-form");
 const registerDialog = byId("register-dialog");
 const workDialog = byId("work-dialog");
 const uploadDialog = byId("upload-dialog");
+const deleteDialog = byId("delete-dialog");
 const notices = byId("notice");
 const tagSelect = byId("tag");
 const utf8 = new TextEncoder();
@@ -246,8 +247,10 @@ async function renderDetail(id, signal, focusHeading) {
         controls.append(action(user ? "收藏作品" : "登录后收藏", button =>
             user ? changeFavorite(id, true, button) : openLogin()));
         if (user && user.id === work.authorId) {
+            const remove = action("删除作品", () => openWorkDeletion(id, work.title), true);
+            remove.classList.add("danger-text");
             controls.append(action("编辑作品", () => openWorkEditor(id, work), true),
-                action("上传图片", () => openImageUpload(id), true));
+                action("上传图片", () => openImageUpload(id), true), remove);
         }
         top.append(title, controls);
         card.append(top, node("p", "作者 #" + work.authorId, "meta"));
@@ -382,6 +385,23 @@ function openImageUpload(id) {
     byId("upload-form").dataset.workId = id;
     openForm(uploadDialog);
 }
+
+function openWorkDeletion(id, title) {
+    if (!user || mutationPending) return;
+    byId("delete-form").dataset.workId = id;
+    byId("delete-description").textContent =
+        "确定删除「" + title + "」吗？删除后，访问者将看不到这件作品和图片。";
+    openForm(deleteDialog);
+}
+
+bindForm(deleteDialog, async () => {
+    const id = byId("delete-form").dataset.workId;
+    await write("/api/works/" + id, "DELETE");
+    deleteDialog.close();
+    if (route().view === "detail" && route().id === id) history.pushState(null, "", previousList);
+    announce("作品已删除。");
+    await render(true);
+});
 
 byId("register").addEventListener("click", () => openForm(registerDialog));
 byId("new-work").addEventListener("click", () => openWorkEditor());

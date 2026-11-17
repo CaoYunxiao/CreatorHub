@@ -45,7 +45,8 @@ public class TagRepository {
         return jdbc.query("""
                 SELECT t.id, t.name FROM tags t
                 JOIN work_tags wt ON wt.tag_id = t.id
-                WHERE wt.work_id = ? ORDER BY t.name, t.id
+                JOIN works w ON w.id = wt.work_id
+                WHERE wt.work_id = ? AND w.deleted_at IS NULL ORDER BY t.name, t.id
                 """, TAG_ROW, workId);
     }
 

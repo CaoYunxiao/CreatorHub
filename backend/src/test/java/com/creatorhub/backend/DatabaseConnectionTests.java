@@ -29,7 +29,7 @@ class DatabaseConnectionTests {
 
         Map<String, Set<String>> expected = Map.of(
                 "users", Set.of("id", "username", "password_hash", "created_at"),
-                "works", Set.of("id", "user_id", "title", "intro", "content", "created_at", "updated_at"),
+                "works", Set.of("id", "user_id", "title", "intro", "content", "created_at", "updated_at", "deleted_at"),
                 "work_images", Set.of("id", "work_id", "image_url", "sort_order"),
                 "tags", Set.of("id", "name"),
                 "work_tags", Set.of("work_id", "tag_id"),

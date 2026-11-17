@@ -59,8 +59,7 @@ class FavoriteFlowTests {
     @Test
     void duplicateInsertIsIdempotentAndMissingWorkReturns404() throws Exception {
         givenUser("reader", 9);
-        when(works.findAuthorId(7L)).thenReturn(Optional.of(12L));
-        doNothing().doThrow(new DuplicateKeyException("duplicate")).when(favorites).insert(9L, 7L);
+        when(favorites.insert(9L, 7L)).thenReturn(1).thenThrow(new DuplicateKeyException("duplicate"));
 
         mvc.perform(put("/api/works/7/favorite").with(user("reader")).with(csrf()))
                 .andExpect(status().isNoContent());
@@ -69,6 +68,7 @@ class FavoriteFlowTests {
         mvc.perform(put("/api/works/8/favorite").with(user("reader")).with(csrf()))
                 .andExpect(status().isNotFound()).andExpect(jsonPath("$.code").value("WORK_NOT_FOUND"));
         verify(favorites, times(2)).insert(9L, 7L);
+        verify(favorites).insert(9L, 8L);
         verifyNoMoreInteractions(favorites);
     }
 
@@ -114,9 +114,11 @@ class FavoriteFlowTests {
         repository.delete(9L, 7L);
 
         verify(jdbc).query(argThat(sql -> sql.contains("WHERE f.user_id = ?")
+                        && sql.contains("w.deleted_at IS NULL")
                         && sql.contains("ORDER BY f.created_at DESC, f.id DESC")),
                 org.mockito.ArgumentMatchers.<RowMapper<WorkSummaryResponse>>any(), eq(9L), eq(5), eq(10L));
-        verify(jdbc).update("DELETE FROM favorites WHERE user_id = ? AND work_id = ?", 9L, 7L);
+        verify(jdbc).update(argThat(sql -> sql.contains("WHERE user_id = ? AND work_id = ?")
+                && sql.contains("w.deleted_at IS NULL")), eq(9L), eq(7L));
     }
 
     private void givenUser(String username, long id) {
