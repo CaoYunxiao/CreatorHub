@@ -224,7 +224,11 @@ SELECT（id、work_id、image_url、sort_order）、INSERT（work_id、image_url
 
 ## 阶段 8：本机浏览器前端
 
-使用上文的数据库环境变量启动后端，打开 http://127.0.0.1:8080/app/index.html。
+Windows 上可双击项目根目录的 `Start-CreatorHub.cmd`。它使用 E 盘 JDK 和现有 JAR，
+在本机窗口隐藏输入 `creatorhub_app` 的 MySQL 密码，等页面可访问后打开默认浏览器。
+CreatorHub 已在运行时，双击会直接打开页面。启动窗口保持打开即可持续访问，
+在该窗口按 Ctrl+C 停止服务。关掉浏览器后，可再次打开原页面地址。
+若缺少 JAR，先按「环境与构建」离线打包。页面地址为 http://127.0.0.1:8080/app/index.html。
 Spring Boot 同时提供页面和 API，前端使用原生 HTML、CSS 和 JavaScript，无需额外安装依赖。
 访客可按标题和标签筛选作品、打开详情、查看图片。登录后可在详情收藏作品，在「我的收藏」
 分页查看或取消收藏。页面沿用 Session Cookie，写请求发出前从当前会话取 CSRF token。
