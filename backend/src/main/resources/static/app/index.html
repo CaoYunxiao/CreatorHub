@@ -18,6 +18,8 @@
             </nav>
             <div class="account">
                 <span id="current-user" hidden></span>
+                <button id="new-work" type="button" hidden>创建作品</button>
+                <button id="register" type="button" class="secondary">注册</button>
                 <button id="login" type="button">登录</button>
                 <button id="logout" type="button" hidden>退出</button>
             </div>
@@ -71,6 +73,54 @@
             <div class="dialog-actions">
                 <button type="button" id="cancel-login" class="secondary">取消</button>
                 <button type="submit">登录</button>
+            </div>
+        </form>
+    </dialog>
+    <dialog id="register-dialog" aria-labelledby="register-title">
+        <form id="register-form">
+            <h2 id="register-title">创建账户</h2>
+            <label for="register-username">用户名</label>
+            <input id="register-username" name="username" autocomplete="username" required
+                   minlength="3" maxlength="50" pattern="[A-Za-z0-9_]{3,50}" aria-describedby="username-help">
+            <p id="username-help" class="meta">3 至 50 位英文字母、数字或下划线。</p>
+            <label for="register-password">密码</label>
+            <input id="register-password" name="password" type="password" autocomplete="new-password"
+                   required minlength="8" maxlength="72" aria-describedby="password-help">
+            <p id="password-help" class="meta">至少 8 个字符，UTF-8 编码不超过 72 字节。</p>
+            <p class="error" role="alert" hidden></p>
+            <div class="dialog-actions">
+                <button type="button" class="secondary" data-close>取消</button>
+                <button type="submit">注册</button>
+            </div>
+        </form>
+    </dialog>
+    <dialog id="work-dialog" class="editor-dialog" aria-labelledby="work-form-title">
+        <form id="work-form">
+            <h2 id="work-form-title">创建作品</h2>
+            <label for="work-title">标题</label>
+            <input id="work-title" name="title" required>
+            <label for="work-intro">简介 <span class="meta">（选填）</span></label>
+            <textarea id="work-intro" name="intro" rows="2"></textarea>
+            <label for="work-body">正文</label>
+            <textarea id="work-body" name="content" rows="7" required></textarea>
+            <p class="error" role="alert" hidden></p>
+            <div class="dialog-actions">
+                <button type="button" class="secondary" data-close>取消</button>
+                <button type="submit">保存作品</button>
+            </div>
+        </form>
+    </dialog>
+    <dialog id="upload-dialog" aria-labelledby="upload-title">
+        <form id="upload-form">
+            <h2 id="upload-title">上传作品图片</h2>
+            <label for="image-file">图片文件</label>
+            <input id="image-file" type="file" name="file" accept="image/jpeg,image/png" required
+                   aria-describedby="image-help">
+            <p id="image-help" class="meta">JPEG 或 PNG，最多 5 MiB，宽高均不超过 4096 像素。</p>
+            <p class="error" role="alert" hidden></p>
+            <div class="dialog-actions">
+                <button type="button" class="secondary" data-close>取消</button>
+                <button type="submit">上传</button>
             </div>
         </form>
     </dialog>

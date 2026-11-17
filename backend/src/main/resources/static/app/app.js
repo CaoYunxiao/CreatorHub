@@ -4,8 +4,12 @@ const maxPage = 2_147_483_647;
 const validId = value => /^[1-9]\d*$/.test(String(value));
 const loginDialog = byId("login-dialog");
 const loginForm = byId("login-form");
+const registerDialog = byId("register-dialog");
+const workDialog = byId("work-dialog");
+const uploadDialog = byId("upload-dialog");
 const notices = byId("notice");
 const tagSelect = byId("tag");
+const utf8 = new TextEncoder();
 let user = null;
 let activeRead;
 let previousList = "#works";
@@ -18,22 +22,35 @@ class ApiError extends Error {
             401: "请登录后继续。",
             403: "操作被拒绝，请刷新后重试。",
             404: "找不到这件作品。",
+            409: "该用户名已被使用。",
+            413: "图片超过 5 MiB，请选择较小的文件。",
             503: "数据库暂时不可用，请稍后重试。"
         }[status] ?? "暂时无法完成请求，请稍后重试。");
         this.status = status;
     }
 }
 
-async function request(path, options = {}) {
+async function send(path, options = {}) {
     const response = await fetch(path, { credentials: "same-origin", ...options });
     if (!response.ok) throw new ApiError(response.status);
+    return response;
+}
+
+async function request(path, options = {}) {
+    const response = await send(path, options);
     return response.status === 204 ? null : response.json();
 }
 
-async function write(path, method, body) {
+async function write(path, method, body, contentType) {
     // 登录和退出会改变会话，每次写入前从当前会话获取 token。
     const { headerName, token } = await request("/api/auth/csrf");
-    return request(path, { method, headers: { [headerName]: token }, body });
+    const headers = { [headerName]: token };
+    if (contentType) headers["Content-Type"] = contentType;
+    return send(path, { method, headers, body });
+}
+
+function writeJson(path, method, values) {
+    return write(path, method, JSON.stringify(values), "application/json");
 }
 
 function node(tag, value, className) {
@@ -63,6 +80,8 @@ function authUi() {
     byId("current-user").textContent = user?.username ?? "";
     byId("current-user").hidden = !user;
     byId("login").hidden = !!user;
+    byId("register").hidden = !!user;
+    byId("new-work").hidden = !user;
     byId("logout").hidden = !user;
 }
 
@@ -223,8 +242,14 @@ async function renderDetail(id, signal, focusHeading) {
         const title = node("h1", work.title);
         title.id = "detail-title";
         title.tabIndex = -1;
-        top.append(title, action(user ? "收藏作品" : "登录后收藏", button =>
+        const controls = node("div", null, "detail-actions");
+        controls.append(action(user ? "收藏作品" : "登录后收藏", button =>
             user ? changeFavorite(id, true, button) : openLogin()));
+        if (user && user.id === work.authorId) {
+            controls.append(action("编辑作品", () => openWorkEditor(id, work), true),
+                action("上传图片", () => openImageUpload(id), true));
+        }
+        top.append(title, controls);
         card.append(top, node("p", "作者 #" + work.authorId, "meta"));
         if (work.intro) card.append(node("p", work.intro, "detail-intro"));
         card.append(node("p", work.content, "detail-body"));
@@ -299,6 +324,124 @@ function handleExpiredSession(error) {
         authUi();
     }
 }
+
+function openForm(dialog) {
+    if (mutationPending) return;
+    const form = dialog.querySelector("form");
+    form.reset();
+    form.querySelector("[role=alert]").hidden = true;
+    dialog.showModal();
+}
+
+function bindForm(dialog, submit) {
+    const form = dialog.querySelector("form");
+    const close = form.querySelector("[data-close]");
+    const save = form.querySelector("[type=submit]");
+    const alert = form.querySelector("[role=alert]");
+    close.addEventListener("click", () => dialog.close());
+    dialog.addEventListener("cancel", event => {
+        if (save.disabled) event.preventDefault();
+    });
+    dialog.addEventListener("close", () => form.reset());
+    form.addEventListener("submit", async event => {
+        event.preventDefault();
+        if (mutationPending) return;
+        mutationPending = true;
+        save.disabled = true;
+        close.disabled = true;
+        alert.hidden = true;
+        try {
+            await submit(new FormData(form));
+        } catch (error) {
+            if (error instanceof ApiError) handleExpiredSession(error);
+            alert.textContent = error instanceof ApiError ? errorMessage(error) : error.message;
+            alert.hidden = false;
+        } finally {
+            const secret = form.querySelector("[type=password]");
+            if (secret) secret.value = "";
+            save.disabled = false;
+            close.disabled = false;
+            mutationPending = false;
+        }
+    });
+}
+
+function openWorkEditor(id = "", work = {}) {
+    if (!user || mutationPending) return;
+    const form = byId("work-form");
+    form.dataset.workId = id;
+    byId("work-form-title").textContent = id ? "编辑作品" : "创建作品";
+    openForm(workDialog);
+    form.elements.title.value = work.title ?? "";
+    form.elements.intro.value = work.intro ?? "";
+    form.elements.content.value = work.content ?? "";
+}
+
+function openImageUpload(id) {
+    if (!user || mutationPending) return;
+    byId("upload-form").dataset.workId = id;
+    openForm(uploadDialog);
+}
+
+byId("register").addEventListener("click", () => openForm(registerDialog));
+byId("new-work").addEventListener("click", () => openWorkEditor());
+
+bindForm(registerDialog, async values => {
+    const username = String(values.get("username"));
+    const password = String(values.get("password"));
+    if (!/^[A-Za-z0-9_]{3,50}$/.test(username)) {
+        throw new Error("用户名需为 3 至 50 位英文字母、数字或下划线。");
+    }
+    if (password.length < 8 || utf8.encode(password).length > 72) {
+        throw new Error("密码至少 8 个字符，UTF-8 编码不能超过 72 字节。");
+    }
+    await writeJson("/api/auth/register", "POST", { username, password });
+    registerDialog.close();
+    announce("账户已创建，请登录。");
+    openLogin();
+    byId("username").value = username;
+    byId("password").focus();
+});
+
+bindForm(workDialog, async values => {
+    const title = String(values.get("title")).trim();
+    const intro = String(values.get("intro"));
+    const content = String(values.get("content"));
+    if (!title || [...title].length > 200) throw new Error("标题必须包含 1 至 200 个字符。");
+    if ([...intro].length > 500) throw new Error("简介不能超过 500 个字符。");
+    if (!content.trim() || utf8.encode(content).length > 65_535) {
+        throw new Error("正文不能为空，UTF-8 编码不能超过 65535 字节。");
+    }
+    const id = byId("work-form").dataset.workId;
+    const path = id ? "/api/works/" + id : "/api/works";
+    const response = await writeJson(path, id ? "PUT" : "POST", { title, intro: intro || null, content });
+    workDialog.close();
+    if (id) {
+        announce("作品已保存。");
+    } else {
+        const location = response.headers.get("Location");
+        const match = location?.match(/^\/api\/works\/([1-9]\d*)$/);
+        history.pushState(null, "", match ? "#work/" + match[1] : "#works");
+        announce(match ? "作品已创建。" : "作品已创建，请在列表中查看。");
+    }
+    await render(true);
+});
+
+bindForm(uploadDialog, async values => {
+    const file = values.get("file");
+    if (!file?.size) throw new Error("请选择一张 JPEG 或 PNG 图片。");
+    if (file.size > 5 * 1024 * 1024) throw new Error("图片超过 5 MiB，请选择较小的文件。");
+    const id = byId("upload-form").dataset.workId;
+    try {
+        await write("/api/works/" + id + "/images", "POST", values);
+    } catch (error) {
+        if (error.status === 400) throw new Error("请选择有效的 JPEG 或 PNG 图片，宽高均不能超过 4096 像素。");
+        throw error;
+    }
+    uploadDialog.close();
+    announce("图片已上传。");
+    await render(true);
+});
 
 async function changeFavorite(id, add, button) {
     if (!validId(id) || mutationPending) return;

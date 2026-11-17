@@ -15,7 +15,7 @@
 body { margin: 0; min-height: 100vh; display: flex; flex-direction: column; }
 main { flex: 1; }
 a { color: var(--accent); text-underline-offset: .2em; }
-button, input, select { font: inherit; }
+button, input, select, textarea { font: inherit; }
 button {
     border: 1px solid var(--accent);
     border-radius: .45rem;
@@ -81,7 +81,7 @@ h1 { font-size: clamp(2.2rem, 5vw, 4rem); letter-spacing: -.045em; margin-bottom
     margin-bottom: 1.5rem;
 }
 label { display: block; margin-bottom: .3rem; font-weight: 650; font-size: .9rem; }
-input, select {
+input, select, textarea {
     width: 100%;
     min-width: 0;
     padding: .65rem .75rem;
@@ -107,6 +107,7 @@ input, select {
 .detail-body { white-space: pre-wrap; line-height: 1.85; }
 .detail-head, .pill-list { display: flex; align-items: start; gap: .7rem; flex-wrap: wrap; }
 .detail-head { justify-content: space-between; margin-bottom: 1rem; }
+.detail-actions { display: flex; gap: .65rem; flex-wrap: wrap; }
 .pill { padding: .25rem .65rem; border-radius: 999px; background: #e4ece1; font-size: .85rem; }
 .gallery { margin-top: 1.5rem; }
 .gallery figure { margin: 0; }
@@ -118,12 +119,17 @@ input, select {
 .footer { margin-top: 3rem; padding-block: 1.2rem; border-top: 1px solid var(--line); font-weight: 700; }
 dialog { width: min(26rem, calc(100% - 2rem)); border: 1px solid var(--line); border-radius: .8rem; padding: 1.65rem; color: var(--ink); background: #fffdf8; }
 dialog::backdrop { background: #18302788; }
-dialog input { margin-bottom: 1rem; }
+dialog input, dialog textarea { margin-bottom: 1rem; }
+dialog input[aria-describedby] { margin-bottom: .4rem; }
+.editor-dialog { width: min(44rem, calc(100% - 2rem)); max-height: calc(100% - 2rem); }
+textarea { display: block; resize: vertical; }
 .dialog-actions { justify-content: end; }
 
 @media (max-width: 650px) {
     .wrap { width: calc(100% - 1.5rem); }
     .header-inner { flex-wrap: wrap; gap: .5rem 1rem; padding-block: .65rem; }
+    .account { flex-wrap: wrap; justify-content: flex-end; gap: .45rem; }
+    .account button { padding-inline: .7rem; }
     nav { order: 1; width: 100%; padding-block: .35rem; }
     .hero { margin-top: 1rem; min-height: 178px; }
     .search { grid-template-columns: 1fr 1fr; }
